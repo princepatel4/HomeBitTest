@@ -1,7 +1,9 @@
-package com.homebit.androidtest;
+package com.homebit.androidtest.view;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.homebit.androidtest.R;
 
 public class MainActivity extends AppCompatActivity {
 
