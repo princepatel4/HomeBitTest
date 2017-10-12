@@ -6,7 +6,12 @@ import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -17,10 +22,9 @@ import com.homebit.androidtest.controller.UserListAdapter;
 import com.homebit.androidtest.model.User.User;
 import com.homebit.androidtest.utils.APIHandler;
 import com.homebit.androidtest.utils.Constants;
-import com.homebit.androidtest.utils.DatabaseHandler;
+import com.homebit.androidtest.utils.Utils;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -28,28 +32,36 @@ public class MainActivity extends AppCompatActivity {
 
 
     RecyclerView recyclerViewUserList;
+    TextView textViewErrorMessage;
     RecyclerView.LayoutManager mLayoutManager;
 
     UserListAdapter userAdapter;
     ProgressDialog progressDialog;
     Gson mGson;
     ArrayList<User> arrayListUserList = new ArrayList<>();
-    DatabaseHandler databaseHandler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mGson = new GsonBuilder().create();
-        databaseHandler = new DatabaseHandler(MainActivity.this);
         setUI();
-
-        getUserList();
+        if(Utils.isNetworkAvailable(MainActivity.this)) {
+            textViewErrorMessage.setVisibility(View.GONE);
+            recyclerViewUserList.setVisibility(View.VISIBLE);
+            getUserList();
+        }else {
+            textViewErrorMessage.setText("No internet connection, please check connection.");
+            textViewErrorMessage.setVisibility(View.VISIBLE);
+            recyclerViewUserList.setVisibility(View.GONE);
+        }
     }
 
     private void setUI(){
 
         recyclerViewUserList = findViewById(R.id.recycler_user_list);
+        textViewErrorMessage = findViewById(R.id.text_error_message);
+
         mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerViewUserList.setLayoutManager(mLayoutManager);
         recyclerViewUserList.setItemAnimator(new DefaultItemAnimator());
@@ -82,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                             arrayListUserList.add(transaction);
                         }
 
-                        databaseHandler.addUserDetails(arrayListUserList);
+
                         userAdapter = new UserListAdapter(arrayListUserList, MainActivity.this);
                         recyclerViewUserList.setAdapter(userAdapter);
 
@@ -104,6 +116,12 @@ public class MainActivity extends AppCompatActivity {
                     if(progressDialog.isShowing()) {
                         progressDialog.dismiss();
                     }
+                    if (error instanceof NoConnectionError) {
+                        textViewErrorMessage.setText("No internet connection, please check connection.");
+                    }else{
+                        textViewErrorMessage.setText("Something went wrong please try again.");
+                    }
+
                 }
 
 
