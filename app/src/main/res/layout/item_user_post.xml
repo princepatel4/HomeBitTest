@@ -6,38 +6,24 @@
     android:layout_margin="@dimen/normal_layout_margin">
 
     <LinearLayout
-        android:id="@+id/layout_user_detail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_margin="@dimen/normal_layout_margin">
 
         <TextView
-            android:id="@+id/text_full_name"
+            android:id="@+id/text_post_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="User name"/>
+            android:text="User name"
+            android:textStyle="bold"/>
         <TextView
-            android:id="@+id/text_user_name"
+            android:id="@+id/text_post_body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/normal_cardview_margin"
             android:text= "Name"/>
-        <TextView
-            android:id="@+id/text_user_address"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/normal_cardview_margin"
-            android:text="Address"/>
 
-        <TextView
-            android:id="@+id/text_user_phone_number"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Phone number"
-            android:layout_marginTop="@dimen/normal_cardview_margin"
-            android:autoLink="phone"/>
 
     </LinearLayout>
 

@@ -20,9 +20,11 @@ import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -68,8 +70,8 @@ public class APIHandler {
         getRequestQueue().add(req);
     }
 
-    public void execute(int requestMethod, String url, JSONObject jsonData, final Response.Listener<JSONObject> onExecuteResponse,
-                        final Response.ErrorListener executeErrorListener, final String token) {
+    public void executeJsonObject(int requestMethod, String url, JSONObject jsonData, final Response.Listener<JSONObject> onExecuteResponse,
+                                  final Response.ErrorListener executeErrorListener, final String token) {
 
         Log.d(TAG, "URL: " + url);
         Log.d(TAG, "Request: " + jsonData);
@@ -165,12 +167,110 @@ public class APIHandler {
         getRequestQueue().add(request);
     }
 
+    public void executeJsonArray(int requestMethod, String url, JSONObject jsonData, final Response.Listener<JSONArray> onExecuteResponse,
+                                 final Response.ErrorListener executeErrorListener, final String token) {
 
+        Log.d(TAG, "URL: " + url);
+        Log.d(TAG, "Request: " + jsonData);
+
+        // Form requestURL from BASE_URL and API strings
+        String requestURL = url;
+
+        JsonArrayRequest request = new JsonArrayRequest(requestURL, new Response.Listener<JSONArray>() {
+
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+                            Log.d(TAG, "Response: " + response);
+                            onExecuteResponse.onResponse(response);
+                        } catch (Exception e) {
+                            Log.d(TAG, "System Error: " + e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        try {
+                            executeErrorListener.onErrorResponse(error);
+                            String message = "Server error.";
+
+
+                            NetworkResponse networkResponse = error.networkResponse;
+                            if (networkResponse != null) {
+
+                                Log.e("Submit", "Error. HTTP Status Code:" + networkResponse.statusCode);
+                            }
+
+                            if (error instanceof TimeoutError) {
+                                Log.e("Volley", "TimeoutError");
+                                message = "Server Timeout.";
+
+                            } else if (error instanceof NoConnectionError) {
+                                Log.e("Volley", "NoConnectionError");
+                                message = "No internet connection.";
+                                Toast.makeText(mContext, "" + message, Toast.LENGTH_SHORT).show();
+                            } else if (error instanceof AuthFailureError) {
+                                Log.e("Volley", "AuthFailureError");
+                                message = "Server error.";
+                            } else if (error instanceof ServerError) {
+                                try {
+                                    message = "Server error.";
+                                    String res = new String(networkResponse.data,
+                                            HttpHeaderParser.parseCharset(networkResponse.headers));
+                                    // Now you can use any deserializer to make sense of data
+                                    JSONObject obj = new JSONObject(res);
+                                } catch (UnsupportedEncodingException e1) {
+                                    // Couldn't properly decode data to string
+                                    e1.printStackTrace();
+                                } catch (JSONException e2) {
+                                    // returned data is not JSONObject?
+                                    e2.printStackTrace();
+                                }
+                            } else if (error instanceof NetworkError) {
+                                message = "Network error.";
+                                Log.e("Volley", "NetworkError");
+                            } else if (error instanceof ParseError) {
+                                message = "Server ParseError.";
+                                Log.e("Volley", "ParseError");
+                            }
+
+                            Toast.makeText(mContext, message, Toast.LENGTH_LONG).show();
+                            System.out.println("API Calling Exception "+message);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Content-Type", "application/json");
+                if (token != null) {
+                    params.put("token", token);
+
+                }
+
+                return params;
+            }
+
+        };
+
+        request.setRetryPolicy(new DefaultRetryPolicy(120 * 1000, 1, 1.0f));
+        getRequestQueue().add(request);
+    }
     public static class restAPI {
         //private static String globalURL = "https://smdn0m0tdf.execute-api.us-west-2.amazonaws.com/prod/";
         //public static String globalURL = "https://smdn0m0tdf.execute-api.us-west-2.amazonaws.com/prod/";
 
-        private static String globalURL = "https://jn76b2wssa.execute-api.ap-southeast-1.amazonaws.com/prod/";
+        private static String globalURL = "https://jsonplaceholder.typicode.com/";
+
+        public final static String USER_LIST = globalURL + "users";
+        public final static String USER_POST = globalURL + "posts?userId=";
 
 
     }

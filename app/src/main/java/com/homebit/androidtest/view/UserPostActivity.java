@@ -14,52 +14,54 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.homebit.androidtest.R;
 import com.homebit.androidtest.controller.UserListAdapter;
+import com.homebit.androidtest.controller.UserPostAdapter;
 import com.homebit.androidtest.model.User.User;
+import com.homebit.androidtest.model.UserPost.Post;
 import com.homebit.androidtest.utils.APIHandler;
 import com.homebit.androidtest.utils.Constants;
 import com.homebit.androidtest.utils.DatabaseHandler;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class UserPostActivity extends AppCompatActivity {
 
-
+    RecyclerView recyclerViewUserPost;
     RecyclerView recyclerViewUserList;
     RecyclerView.LayoutManager mLayoutManager;
 
-    UserListAdapter userAdapter;
+    UserPostAdapter userAdapter;
     ProgressDialog progressDialog;
     Gson mGson;
-    ArrayList<User> arrayListUserList = new ArrayList<>();
+    ArrayList<Post> arrayListUserPost = new ArrayList<>();
+    int selectedUserId;
     DatabaseHandler databaseHandler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_user_post);
 
         mGson = new GsonBuilder().create();
-        databaseHandler = new DatabaseHandler(MainActivity.this);
-        setUI();
+        databaseHandler = new DatabaseHandler(UserPostActivity.this);
+        selectedUserId = getIntent().getIntExtra(Constants.EXTRA_KEY_USER_ID,1);
 
-        getUserList();
+        setUI();
+        getUserPost();
     }
 
     private void setUI(){
 
-        recyclerViewUserList = findViewById(R.id.recycler_user_list);
+        recyclerViewUserList = findViewById(R.id.recycler_user_post);
         mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerViewUserList.setLayoutManager(mLayoutManager);
         recyclerViewUserList.setItemAnimator(new DefaultItemAnimator());
     }
 
-
-    private void getUserList()
+    private void getUserPost()
     {
 
-        progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog = new ProgressDialog(UserPostActivity.this);
         progressDialog.setMessage(Constants.PROGRESS_DIALOG_MESSAGE_PLEASE_WAIT);
         progressDialog.setCancelable(false);
         if(!progressDialog.isShowing()) {
@@ -67,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
-            new APIHandler().getsharedInstance(MainActivity.this).executeJsonArray(Request.Method.GET, APIHandler.restAPI.USER_LIST, null, new Response.Listener<JSONArray>() {
+            new APIHandler().getsharedInstance(UserPostActivity.this).executeJsonArray(Request.Method.GET, APIHandler.restAPI.USER_POST+selectedUserId, null, new Response.Listener<JSONArray>() {
 
 
                 @Override
@@ -78,12 +80,12 @@ public class MainActivity extends AppCompatActivity {
                         JSONArray jsonArrayUser = new JSONArray(response.toString());
 
                         for (int i = 0 ; i < jsonArrayUser.length() ; i ++) {
-                            User transaction = mGson.fromJson(jsonArrayUser.getJSONObject(i).toString().toString(), User.class);
-                            arrayListUserList.add(transaction);
+                            Post userPost = mGson.fromJson(jsonArrayUser.getJSONObject(i).toString().toString(), Post.class);
+                            arrayListUserPost.add(userPost);
                         }
 
-                        databaseHandler.addUserDetails(arrayListUserList);
-                        userAdapter = new UserListAdapter(arrayListUserList, MainActivity.this);
+
+                        userAdapter = new UserPostAdapter(arrayListUserPost, UserPostActivity.this);
                         recyclerViewUserList.setAdapter(userAdapter);
 
 
